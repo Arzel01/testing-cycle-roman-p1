@@ -1,0 +1,47 @@
+name: mutation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  mutmut:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+      - name: Run mutmut
+        run: PYTHONPATH=src python -m mutmut run || true
+      - name: Compute mutation score and gate at 90%
+        run: |
+          PYTHONPATH=src python - <<'PY'
+          import subprocess, sys, re
+          out = subprocess.run(["python", "-m", "mutmut", "results"], capture_output=True, text=True).stdout
+          print(out)
+          killed = len(re.findall(r"^\s*\d+", out, re.M)) if False else 0
+          import json
+          try:
+              data = subprocess.run(["python", "-m", "mutmut", "junitxml"], capture_output=True, text=True).stdout
+          except Exception:
+              data = ""
+          totals = subprocess.run(["python", "-m", "mutmut", "result-ids", "killed"], capture_output=True, text=True).stdout.split()
+          survived = subprocess.run(["python", "-m", "mutmut", "result-ids", "survived"], capture_output=True, text=True).stdout.split()
+          timeout = subprocess.run(["python", "-m", "mutmut", "result-ids", "timeout"], capture_output=True, text=True).stdout.split()
+          suspicious = subprocess.run(["python", "-m", "mutmut", "result-ids", "suspicious"], capture_output=True, text=True).stdout.split()
+          k = len(totals)
+          s = len(survived)
+          total = k + s + len(timeout) + len(suspicious)
+          score = (k / total * 100) if total else 0.0
+          print(f"killed={k} survived={s} total={total} score={score:.1f}%")
+          if score < 90.0:
+              print("FAIL: mutation score below 90%")
+              sys.exit(1)
+          PY

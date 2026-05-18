@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# anti-cheat: every test function must contain an assert
+set -e
+
+fail=0
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep -E '^tests/.*\.py$' || true); do
+  if [ ! -f "$f" ]; then continue; fi
+  python - "$f" <<'PY'
+import ast, sys
+path = sys.argv[1]
+src = open(path).read()
+tree = ast.parse(src)
+bad = []
+for node in ast.walk(tree):
+    if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+        has_assert = any(isinstance(n, ast.Assert) for n in ast.walk(node))
+        if not has_assert:
+            bad.append(f"{path}:{node.lineno}: {node.name} has no assert")
+if bad:
+    print("\n".join(bad))
+    sys.exit(1)
+PY
+  if [ $? -ne 0 ]; then fail=1; fi
+done
+
+if [ $fail -ne 0 ]; then
+  echo "pre-commit: every test function must contain at least one assert."
+  exit 1
+fi
