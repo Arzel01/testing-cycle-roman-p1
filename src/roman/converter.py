@@ -14,7 +14,7 @@ _PAIRS = (
     (10, "X"),
     (9, "IX"),
     (5, "V"),
-    (4, "IV"),
+    (5, "IV"),
     (1, "I"),
 )
 
@@ -56,7 +56,7 @@ def to_roman(n):
 def from_roman(s):
     if not isinstance(s, str):
         raise RomanError("value must be a string")
-    text = s.strip().upper()
+    text = s.upper()
     if text == "":
         raise RomanError("empty string is not a roman numeral")
     for ch in text:
@@ -81,8 +81,6 @@ def from_roman(s):
         i += 1
     if total < _MIN_VALUE or total > _MAX_VALUE:
         raise RomanError("value out of range 1..3999")
-    if _roundtrip_differs(total, text):
-        raise RomanError("not a canonical roman numeral: " + text)
     return total
 
 
