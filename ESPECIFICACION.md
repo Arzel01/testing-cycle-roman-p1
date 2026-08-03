@@ -1,6 +1,6 @@
 # Especificación funcional — Conversor de números romanos
 
-**Sistema:** `roman` — biblioteca de conversión entre enteros y números romanos, con GUI de escritorio.
+**Sistema:** `roman` — biblioteca de conversión entre enteros y números romanos.
 **Versión:** 1.0
 **Estado:** Aprobada.
 
@@ -62,7 +62,7 @@ Devuelve el entero correspondiente a la cadena romana `s`.
 - Acepta **minúsculas y mayúsculas** indistintamente: `from_roman("iv")` = 4.
 - **Tolera espacios en blanco alrededor.** El sistema **debe recortar** los espacios **al inicio y
   al final** antes de procesar: `from_roman("  IV  ")` = 4, `from_roman("X ")` = 10. Los datos
-  llegan de un campo de texto de la GUI, donde el usuario deja espacios con frecuencia.
+  llegan de entrada de usuario (CLI o formulario), donde los espacios sobrantes son frecuentes.
 - **Los espacios internos NO se toleran**: `from_roman("X I")` es inválido → `RomanError`. Sólo se
   recortan los extremos.
 - Una cadena vacía (o sólo espacios) es inválida → `RomanError`.
@@ -100,7 +100,7 @@ y sólo si cumple **todas** estas reglas:
 
 > Ojo: **no** definas la forma canónica como "`to_roman(from_roman(s)) == s`". Esa fórmula usa el
 > propio código como oráculo, y si `to_roman` tiene un defecto la fórmula lo da por bueno. La
-> especificación no puede depender de la implementación que pretende validar. Las cuatro reglas de
+> especificación no puede depender de la implementación que pretende validar. Las cinco reglas de
 > arriba son el criterio normativo; la tabla de ejemplos es normativa también.
 
 ## 5. Pares sustractivos inválidos
@@ -152,9 +152,3 @@ Ejemplos obligatorios:
 **Ambas operaciones deben ser coherentes con `to_roman` y `from_roman`:** el resultado de
 `add_roman` siempre debe ser una cadena que `is_valid_roman` acepte.
 
-## 8. Interfaz gráfica
-
-La GUI presenta dos campos: entero y romano. Al escribir en uno, el otro se actualiza. Los errores
-se muestran como mensaje en línea, sin cerrar la aplicación.
-
-**La GUI está fuera del alcance de este taller.** No se piden pruebas de la capa Tkinter.

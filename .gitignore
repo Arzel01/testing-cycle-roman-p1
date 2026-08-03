@@ -4,7 +4,6 @@ __pycache__/
 .eggs/
 build/
 dist/
-.mutmut-cache
 mutants/
 .pytest_cache/
 .venv/
