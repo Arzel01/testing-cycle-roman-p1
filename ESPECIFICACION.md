@@ -85,14 +85,18 @@ pero no es la forma canónica de ese valor **debe rechazarse** con `RomanError`.
 | `IV` | `4` | canónica |
 | `MCMXCIV` | `1994` | canónica |
 
-**Criterio formal de forma canónica.** Una cadena romana es canónica si y sólo si cumple **todas**
-estas reglas (definidas sobre la cadena, sin depender de la implementación):
+**Criterio formal de forma canónica.** Léase la cadena como una secuencia de **grupos**, donde un
+grupo es una de las seis parejas sustractivas de §2 o un símbolo simple. Una cadena es canónica si
+y sólo si cumple **todas** estas reglas:
 
 1. `I`, `X`, `C`, `M` aparecen **como máximo tres veces consecutivas**.
 2. `V`, `L`, `D` aparecen **como máximo una vez** en toda la cadena.
-3. Las únicas parejas sustractivas permitidas son las seis de §2, y cada una aparece **como máximo
-   una vez**.
+3. Las únicas parejas sustractivas permitidas son las seis de §2, cada una **como máximo una vez**.
+   Fuera de esas seis, ningún símbolo puede ir seguido de otro de mayor valor.
 4. Los valores de los grupos van en orden **no creciente** de izquierda a derecha.
+5. **Después de una pareja sustractiva** (p. ej. `IV`), todo grupo posterior debe valer **menos que
+   el símbolo restado** (menos que `I` en el caso de `IV`). Por eso `IVI` no es canónico: 4+1 = 5 se
+   escribe `V`.
 
 > Ojo: **no** definas la forma canónica como "`to_roman(from_roman(s)) == s`". Esa fórmula usa el
 > propio código como oráculo, y si `to_roman` tiene un defecto la fórmula lo da por bueno. La
