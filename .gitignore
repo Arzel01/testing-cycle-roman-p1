@@ -9,3 +9,4 @@ mutants/
 .pytest_cache/
 .venv/
 venv/
+.coverage
