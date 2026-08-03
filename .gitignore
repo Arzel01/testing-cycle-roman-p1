@@ -9,3 +9,4 @@ mutants/
 .venv/
 venv/
 .coverage
+*.egg-info/
