@@ -1,26 +1,20 @@
-PY ?= python
+PY ?= python3
 PIP ?= pip
 
-.PHONY: install test mutate gui ci clean hooks
+.PHONY: install test cov run clean
 
 install:
 	$(PIP) install -r requirements.txt
 	$(PIP) install -e .
 
-hooks:
-	git config core.hooksPath .githooks || true
-
 test:
-	PYTHONPATH=src $(PY) -m pytest -q
+	$(PY) -m pytest -q
 
-mutate:
-	PYTHONPATH=src $(PY) -m mutmut run || true
-	PYTHONPATH=src $(PY) -m mutmut results
+cov:
+	$(PY) -m pytest --cov=roman.converter --cov-branch --cov-report=term-missing
 
-gui:
-	PYTHONPATH=src $(PY) -m roman.gui
-
-ci: test mutate
+run:
+	$(PY) -m roman
 
 clean:
-	rm -rf .mutmut-cache .pytest_cache **/__pycache__ build dist *.egg-info
+	rm -rf .pytest_cache **/__pycache__ build dist *.egg-info .coverage

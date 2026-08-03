@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "roman"
 version = "0.1.0"
-description = "Roman numeral converter with Tkinter GUI for mutation testing workshop"
+description = "Roman numeral converter — IS2 testing cycle workshop"
 requires-python = ">=3.10"
 
 [tool.setuptools.packages.find]
@@ -15,7 +15,3 @@ where = ["src"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 
-[tool.mutmut]
-paths_to_mutate = ["src/roman/converter.py"]
-tests_dir = ["tests/test_converter.py"]
-runner = "python -m pytest -x -q tests/test_converter.py"
