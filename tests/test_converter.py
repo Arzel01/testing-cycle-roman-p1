@@ -1,4 +1,4 @@
-# weak suite — student must strengthen
+# test suite
 from roman.converter import to_roman, from_roman
 
 

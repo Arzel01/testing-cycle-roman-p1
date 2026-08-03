@@ -1,45 +1,53 @@
-# roman — Conversor de números romanos
+# roman
 
-ESPOL · IS2 (SOFG1008) · **Taller individual: aplicación del ciclo de testing** · Paralelo 1
+Roman numeral conversion library. Supports integers 1 to 3999 with subtractive notation.
 
-Heredas un proyecto que ya funciona... o eso parece. Tiene una suite de pruebas que pasa en verde.
-El código tiene defectos de todas formas.
-
-## Qué hay aquí
-
-- `src/roman/converter.py` — la biblioteca de conversión. **Es el sistema bajo prueba.**
-- `src/roman/__main__.py` — CLI mínima para inspeccionar conversiones a mano.
-- `tests/test_converter.py` — la suite heredada. Pasa en verde. Es débil a propósito.
-- `ESPECIFICACION.md` — **la fuente de verdad.** Lo que el sistema *debería* hacer.
-
-## Arranque
+## Install
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e . pytest pytest-cov
-pytest
 ```
 
-Debes ver **15 passed**.
+## Run the tests
 
 ```bash
+pytest
 pytest --cov=roman.converter --cov-branch --cov-report=term-missing
 ```
 
-Cobertura de ramas inicial: **64%**.
+## Usage
 
-## CLI
+```python
+from roman.converter import to_roman, from_roman
 
-Útil para probar conversiones sin escribir una prueba:
-
-```bash
-python -m roman 4 9 1994 IV MCMXCIV
+to_roman(1994)        # 'MCMXCIV'
+from_roman('MCMXCIV') # 1994
 ```
 
-## Tu trabajo
+Command line:
 
-Está en la guía del taller en Aula Virtual. En resumen: aplica el ciclo de testing (unidad →
-integración → aceptación) para encontrar los defectos que la suite heredada no ve, clasificándolos
-como faltas de **omisión** o de **comisión**.
+```bash
+python -m roman 4 IV 1994
+```
 
-No modifiques `src/` hasta la actividad de regresión. Añade pruebas; no borres las existentes.
+## API
+
+| Function | Description |
+|---|---|
+| `to_roman(n)` | Integer to roman numeral |
+| `from_roman(s)` | Roman numeral to integer |
+| `is_valid_roman(s)` | Whether a string is a valid roman numeral |
+| `add_roman(a, b)` | Sum of two roman numerals |
+| `subtract_roman(a, b)` | Difference of two roman numerals |
+
+Invalid input raises `RomanError`.
+
+## Layout
+
+```
+src/roman/converter.py    conversion library
+src/roman/__main__.py     command line entry point
+tests/test_converter.py   test suite
+SPECIFICATION.md          functional specification
+```
