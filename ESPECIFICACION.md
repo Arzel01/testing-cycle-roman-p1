@@ -60,11 +60,16 @@ Ejemplos de referencia obligatorios:
 Devuelve el entero correspondiente a la cadena romana `s`.
 
 - Acepta **minúsculas y mayúsculas** indistintamente: `from_roman("iv")` = 4.
-- **Tolera espacios en blanco alrededor.** El sistema **debe recortar** los espacios antes de
-  procesar: `from_roman("  IV  ")` = 4, `from_roman("X ")` = 10. Los datos llegan de un campo de
-  texto de la GUI, donde el usuario deja espacios con frecuencia.
-- Una cadena vacía es inválida → `RomanError`.
+- **Tolera espacios en blanco alrededor.** El sistema **debe recortar** los espacios **al inicio y
+  al final** antes de procesar: `from_roman("  IV  ")` = 4, `from_roman("X ")` = 10. Los datos
+  llegan de un campo de texto de la GUI, donde el usuario deja espacios con frecuencia.
+- **Los espacios internos NO se toleran**: `from_roman("X I")` es inválido → `RomanError`. Sólo se
+  recortan los extremos.
+- Una cadena vacía (o sólo espacios) es inválida → `RomanError`.
 - Un carácter que no sea un símbolo romano es inválido → `RomanError`.
+- Un valor fuera del rango 1..3999 es inválido → `RomanError`. En particular `from_roman("MMMM")`
+  (4000) es inválido, aunque la cadena esté bien formada.
+- Una entrada que no sea `str` es inválida → `RomanError`.
 
 ## 4. Validación de forma canónica
 
@@ -80,8 +85,19 @@ pero no es la forma canónica de ese valor **debe rechazarse** con `RomanError`.
 | `IV` | `4` | canónica |
 | `MCMXCIV` | `1994` | canónica |
 
-Criterio formal: `from_roman(s)` es válida si y sólo si `to_roman(from_roman(s)) == s` (tras
-normalizar mayúsculas y espacios).
+**Criterio formal de forma canónica.** Una cadena romana es canónica si y sólo si cumple **todas**
+estas reglas (definidas sobre la cadena, sin depender de la implementación):
+
+1. `I`, `X`, `C`, `M` aparecen **como máximo tres veces consecutivas**.
+2. `V`, `L`, `D` aparecen **como máximo una vez** en toda la cadena.
+3. Las únicas parejas sustractivas permitidas son las seis de §2, y cada una aparece **como máximo
+   una vez**.
+4. Los valores de los grupos van en orden **no creciente** de izquierda a derecha.
+
+> Ojo: **no** definas la forma canónica como "`to_roman(from_roman(s)) == s`". Esa fórmula usa el
+> propio código como oráculo, y si `to_roman` tiene un defecto la fórmula lo da por bueno. La
+> especificación no puede depender de la implementación que pretende validar. Las cuatro reglas de
+> arriba son el criterio normativo; la tabla de ejemplos es normativa también.
 
 ## 5. Pares sustractivos inválidos
 
@@ -97,7 +113,7 @@ símbolo menor precede a uno mayor es inválida → `RomanError`.
 ## 6. Validación de números romanos — `is_valid_roman(s)`
 
 Devuelve `True` si `s` es un número romano canónico válido según §3, §4 y §5; `False` en cualquier
-otro caso. **No lanza excepciones.**
+otro caso. **No lanza excepciones nunca**, para ningún tipo de entrada.
 
 | Entrada | `is_valid_roman` |
 |---|---|
@@ -105,6 +121,9 @@ otro caso. **No lanza excepciones.**
 | `IIII` | **`False`** (no canónica, §4) |
 | `Z` | `False` |
 | `""` | `False` |
+| `"  IV  "` | `True` (se recortan los extremos, §3) |
+| `123` (no string) | `False` (no lanza excepción) |
+| `None` | `False` (no lanza excepción) |
 
 ## 7. Aritmética romana — `add_roman(a, b)` y `subtract_roman(a, b)`
 
