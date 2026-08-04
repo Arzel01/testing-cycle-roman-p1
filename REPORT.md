@@ -27,23 +27,26 @@ V(G) = 18 - 14 + 2*1 = 6
 
 ![Independent Paths](docs/figures/IndependentPaths_toroman.png "Independent Paths")
 
-The node numbering used below follows the CFG above. Node 2 is the compound predicate
-`not isinstance(n, int) or isinstance(n, bool)`; a strict decomposition would split it into
-two nodes (2a and 2b) and raise V(G) to 7. The paths below use the collapsed node 2 as drawn.
+The letter labels below match the DD-PATH graph above.
+Node A is the compound predicate `not isinstance(n, int) or isinstance(n, bool)`;
+a strict decomposition would split A into two nodes and raise V(G) to 7.
+The paths below use the collapsed node A as drawn.
 
-| Path | Node sequence |
-| :---: | :--- |
-| P1 | 1 → 2(T) → 3 → 14 |
-| P2 | 1 → 2(F) → 4(T) → 5 → 14 |
-| P3 | 1 → 2(F) → 4(F) → 6(T) → 7 → 14 |
-| P4 | 1 → 2(F) → 4(F) → 6(F) → 8 → 9 → 10 → 14 |
-| P5 | 1 → 2(F) → 4(F) → 6(F) → 8 → 9 → 10 → 11(T) → 12 → 13 → 11(F) → 10 → 14 |
-| P6 | 1 → 2(F) → 4(F) → 6(F) → 8 → 9 → 10 → 11(T) → 12 → 13 → 11(T) → 12 → 13 → 11(F) → 10 → 14 |
+| Path | Node sequence | Condition exercised |
+| :---: | :--- | :--- |
+| P1 | Src → A → B → Snk | type check fails → raise |
+| P2 | Src → A → C → D → Snk | `n < 1` → raise |
+| P3 | Src → A → C → E → F → Snk | `n > 3999` → raise |
+| P4 | Src → A → C → E → G → H → L → Snk | valid input, `for` never entered |
+| P5 | Src → A → C → E → G → H → I → H → L → Snk | `while` never entered |
+| P6 | Src → A → C → E → G → H → I → J → K → I → H → L → Snk | `for and while` body executes at least once |
 
 Each path introduces at least one edge not present in any prior path, confirming the six paths
-are linearly independent. P1–P3 cover the three error exits; P4 covers the for-loop short-exit
-(exhausted without entering the while body); P5 covers the while body executing once; P6 covers
-the while body executing twice (e.g. `to_roman(2)` repeats the `(1, "I")` pair twice).
+are linearly independent.
+- P1–P3 cover the three error exits
+- P4 covers the case where the `for` condition is immediately false
+- P5 covers one `for` iteration and `while` iteration is false 
+- P6 covers at least one `for` iteration and at least one `while` iteration.
 
 ## Build the definition-use table for `to_roman`
 
@@ -52,8 +55,8 @@ Node numbering matches the CFG above. Node 14 is the unified function exit (all 
 `out.append(symbol)`, node 13 = `remaining -= value`.
 
 > **Compound predicate note.** Line 41 contains `not isinstance(n, int) or isinstance(n, bool)`,
-> which is a compound predicate. A strict decomposition requires two separate decision nodes — one
-> for each sub-condition — and would add one extra p-use pair for `n` (definition at node 1, p-use
+> which is a compound predicate. A strict decomposition requires two separate decision nodes, one
+> for each sub-condition, and would add one extra p-use pair for `n` (definition at node 1, p-use
 > at the second sub-condition node). The table below reflects the graph as drawn; the missing pair
 > is `1 → (bool-check node) | | n`.
 
@@ -97,7 +100,7 @@ AssertionError: assert 'IIII' == 'IV'
 ### Why the integration test failed
 
 The defect was in the `_PAIRS` constant (`converter.py`, line 17). The entry for subtractive
-notation of 4 read `(5, "IV")` — the threshold value was 5 instead of 4. As a result, when
+notation of 4 read `(5, "IV")`, the threshold value was 5 instead of 4. As a result, when
 `to_roman` iterated over `_PAIRS`, it tested `remaining >= 5` before appending `"IV"`. Because
 `4 < 5`, that branch was never taken, and the function fell through to the `(1, "I")` entry,
 appending `"I"` four times and returning `"IIII"`.
@@ -105,7 +108,7 @@ appending `"I"` four times and returning `"IIII"`.
 ### Why the unit tests passed
 
 None of the existing unit tests call `to_roman(4)` directly. The unit tests cover the values
-1, 2, 3, 5, 10, 50, 100, 500, and 1000 — they skip 4 entirely. A unit test examines a
+1, 2, 3, 5, 10, 50, 100, 500, and 1000, they skip 4 entirely. A unit test examines a
 single function in isolation; because no test happened to supply the value that exercises the
 broken branch, the defect was invisible at the unit level.
 
@@ -126,23 +129,23 @@ After the fix, `to_roman(4)` returns `"IV"`, the integration test passes, and
 
 ## Acceptance criteria (from SPECIFICATION.md)
 
-### AC-1 — Subtractive notation is mandatory for `to_roman` (Spec §2)
+### AC-1: Subtractive notation is mandatory for `to_roman` (Spec 2)
 
 **Given** the integer 4  
 **When** `to_roman(4)` is called  
-**Then** the result is `"IV"` — never `"IIII"`
+**Then** the result is `"IV"`, never `"IIII"`
 
-### AC-2 — `from_roman` tolerates leading and trailing whitespace (Spec §3)
+### AC-2: `from_roman` tolerates leading and trailing whitespace (Spec 3)
 
 **Given** a roman string that has leading and/or trailing spaces (e.g. `"  IV  "` or `"X "`)  
 **When** `from_roman` is called with that string  
 **Then** the whitespace is stripped and the correct integer is returned
 
-### AC-3 — `from_roman` rejects non-canonical strings (Spec §4)
+### AC-3: `from_roman` rejects non-canonical strings (Spec 4)
 
 **Given** the string `"IIII"`, which encodes the value 4 but is not in canonical form  
 **When** `from_roman("IIII")` is called  
-**Then** `RomanError` is raised — the canonical form of 4 is `"IV"`
+**Then** `RomanError` is raised, the canonical form of 4 is `"IV"`
 
 ---
 
@@ -167,19 +170,19 @@ executed at least once. It says nothing about whether the code contains all the 
 specification requires.
 
 `from_roman` has no branch that checks for canonical form: there is no `if` for "too many
-identical symbols in a row", no check for the five canonical-form rules in Spec §4. Every
-branch that exists is covered — coverage is 100 % — yet the required behaviour is simply
+identical symbols in a row", no check for the five canonical-form rules in Spec 4. Every
+branch that exists is covered, so the branch coverage is 100%, yet the required behaviour is simply
 absent. A coverage tool can only measure paths through code that is there; it cannot detect
 code that is missing entirely.
 
 Acceptance test AC-3 exposes a **specification gap**: the function passes every structural
 test while failing a functional requirement derived from the specification.
 
-# Part 6: Iteration — defect fixes and final coverage
+# Iteration
 
 ## Three defects found and fixed
 
-### Defect 1 — Wrong threshold in `_PAIRS` for subtractive 4 (found by integration test)
+### Defect 1: Wrong threshold in `_PAIRS` for subtractive 4 (found by integration test)
 
 **File:** `converter.py` line 17  
 **Before:** `(5, "IV")`  
@@ -194,7 +197,7 @@ the integration test exercised the full `from_roman → add → to_roman` pipeli
 
 ---
 
-### Defect 2 — `from_roman` did not strip surrounding whitespace (found by acceptance test AC-2)
+### Defect 2: `from_roman` did not strip surrounding whitespace (found by acceptance test AC-2)
 
 **File:** `converter.py`, `from_roman`  
 **Before:** `text = s.upper()` (no strip)  
@@ -203,14 +206,14 @@ the integration test exercised the full `from_roman → add → to_roman` pipeli
 ```
 fix(acceptance): strip surrounding whitespace in from_roman per spec section 3
 ```
-Spec §3 states that leading and trailing whitespace must be tolerated. The function raised
+Spec 3 states that leading and trailing whitespace must be tolerated. The function raised
 `RomanError("invalid roman character: " + ch)` for the space character instead of ignoring it.
 Branch coverage reported 100 % without ever testing a whitespace input, because there is no
-branch in the code that checks for spaces — the code was simply missing the stripping step.
+branch in the code that checks for spaces, so the code was simply missing the stripping step.
 
 ---
 
-### Defect 3 — `from_roman` accepted non-canonical strings (found by acceptance test AC-3)
+### Defect 3: `from_roman` accepted non-canonical strings (found by acceptance test AC-3)
 
 **File:** `converter.py`, `from_roman`  
 **Before:** function returned the integer without validating canonical form  
@@ -223,7 +226,7 @@ if _roundtrip_differs(total, text):
 ```
 fix(acceptance): reject non-canonical roman strings in from_roman per spec section 4
 ```
-Spec §4 requires that `from_roman` reject strings such as `"IIII"` whose value is in range but
+Spec 4 requires that `from_roman` reject strings such as `"IIII"` whose value is in range but
 whose form is not canonical. The helper `_roundtrip_differs` was already present but unused for
 validation. Inserting the check makes `from_roman("IIII")` raise `RomanError` because
 `to_roman(4) == "IV" ≠ "IIII"`.
@@ -234,31 +237,9 @@ validation. Inserting the check makes `from_roman("IIII")` raise `RomanError` be
 
 ### Before (inherited suite, 15 tests)
 
-```
-Branch coverage: 64 %
-```
-(See screenshot `docs/figures/BranchCoverage64.png`)
+![Branch Coverage Before](docs/figures/BranchCoverage64.png)
 
 ### After (all fixes applied, 53 tests)
 
-```
-============================= test session starts =============================
-platform win32 -- Python 3.11.9, pytest-9.0.3, pluggy-1.6.0
-rootdir: C:\Users\Adrian\Desktop\testing-cycle-roman-p1
-configfile: pyproject.toml
-testpaths: tests
-plugins: anyio-4.9.0, cov-7.1.0
-collected 53 items
-
-tests\test_converter.py ..................................................... [100%]
-
-=============================== tests coverage ================================
-Name                     Stmts   Miss Branch BrPart  Cover   Missing
---------------------------------------------------------------------
-src\roman\converter.py      71      0     36      0   100%
---------------------------------------------------------------------
-TOTAL                       71      0     36      0   100%
-============================= 53 passed in 0.17s ==============================
-```
-
+![Branch Coverage After](docs/figures/BranchCoverage100.png)
 The 15 inherited tests were not modified or deleted.
