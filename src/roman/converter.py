@@ -82,6 +82,8 @@ def from_roman(s):
         i += 1
     if total < _MIN_VALUE or total > _MAX_VALUE:
         raise RomanError("value out of range 1..3999")
+    if _roundtrip_differs(total, text):
+        raise RomanError("non-canonical roman numeral: " + text)
     return total
 
 
