@@ -50,9 +50,28 @@ are linearly independent.
 
 ## Build the definition-use table for `to_roman`
 
-Node numbering matches the CFG above. Node 14 is the unified function exit (all three
-`raise` paths and `return` converge there). The loop body is split: node 12 =
-`out.append(symbol)`, node 13 = `remaining -= value`.
+The following table maps the numeric node IDs used in the DU table to the DD-PATH letters
+used in the basis-set paths above:
+
+| Node | DD-PATH letter | Code element |
+| :---: | :---: | :--- |
+| 1 | Src | function entry / parameter `n` defined |
+| 2 | A | `not isinstance(n, int) or isinstance(n, bool)` |
+| 3 | B | `raise RomanError("value must be an integer")` |
+| 4 | C | `if n < _MIN_VALUE` |
+| 5 | D | `raise RomanError("value must be >= 1")` |
+| 6 | E | `if n > _MAX_VALUE` |
+| 7 | F | `raise RomanError("value must be <= 3999")` |
+| 8 | G | `out = []` |
+| 9 | H | `remaining = n` |
+| 10 | I | `for value, symbol in _PAIRS` |
+| 11 | J | `while remaining >= value` |
+| 12 | K | `out.append(symbol)` |
+| 13 | L | `remaining -= value` |
+| 14 | Snk | `return "".join(out)` / unified exit |
+
+Node 14 is the unified function exit (all three `raise` paths and `return` converge there).
+The loop body is split: node 12 = `out.append(symbol)`, node 13 = `remaining -= value`.
 
 > **Compound predicate note.** Line 41 contains `not isinstance(n, int) or isinstance(n, bool)`,
 > which is a compound predicate. A strict decomposition requires two separate decision nodes, one
@@ -242,4 +261,27 @@ validation. Inserting the check makes `from_roman("IIII")` raise `RomanError` be
 ### After (all fixes applied, 53 tests)
 
 ![Branch Coverage After](docs/figures/BranchCoverage100.png)
+
+```
+============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\Adrian\Desktop\testing-cycle-roman-p1
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.9.0, cov-7.1.0
+collected 53 items
+
+tests\test_converter.py .....................................................  [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.11.9-final-0 _______________
+
+Name                     Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------
+src\roman\converter.py      71      0     36      0   100%
+--------------------------------------------------------------------
+TOTAL                       71      0     36      0   100%
+============================= 53 passed in 0.12s ==============================
+```
+
 The 15 inherited tests were not modified or deleted.
