@@ -182,10 +182,7 @@ After fixing the `_PAIRS` defect (AC-1 passes) and adding whitespace stripping t
 `from_roman` (AC-2 passes), `converter.py` achieves **100 % branch coverage**. AC-3 still
 **fails**:
 
-```
-FAILED tests/test_converter.py::test_ac3_from_roman_rejects_non_canonical_string
-Failed: DID NOT RAISE RomanError
-```
+![Acceptance Test 85%](docs/figures/AcceptanceTest85.png "Acceptance Test 85%")
 
 `from_roman("IIII")` processes four valid `I` characters, accumulates `1+1+1+1 = 4`, and
 returns 4 without raising an error.
