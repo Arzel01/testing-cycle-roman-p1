@@ -165,11 +165,11 @@ def test_subtract_roman_to_one():
 
 
 def test_roundtrip_differs_same():
-    assert _roundtrip_differs(4, "IIII") is False
+    assert _roundtrip_differs(4, "IV") is False
 
 
 def test_roundtrip_differs_different():
-    assert _roundtrip_differs(4, "IV") is True
+    assert _roundtrip_differs(4, "IIII") is True
 
 
 def test_count_char_present():
