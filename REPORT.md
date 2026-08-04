@@ -21,16 +21,26 @@ E = 18 (edges)
 N = 14 (nodes)
 P = 1 (connected components)
 
-V(G) = 18 - 14 + 2*1 = 6
+V(G) = 18 - 14 + 2*1 = **6**
+
+> **Compound predicate note.** Line 41 contains `not isinstance(n, int) or isinstance(n, bool)`,
+> which is a compound predicate (`or`). The graph above treats it as a single decision node A.
+> A strict decomposition would split A into two sequential nodes:
+> - **A1**: `not isinstance(n, int)` — True → B (raise); False → A2
+> - **A2**: `isinstance(n, bool)` — True → B (raise); False → C
+>
+> Because Python short-circuits `or`, A2 is only reached when A1 is False, making them
+> genuinely separate decision points. The decomposed graph has N = 15, E = 20, giving
+> V(G) = 20 − 15 + 2 = **7** and one additional independent path
+> `Src → A1 → A2 → B → Snk` (n is an int but is a bool).
+> The analysis below uses the collapsed node A as drawn in the graph.
 
 ## Set of independent paths for `to_roman` function
 
 ![Independent Paths](docs/figures/IndependentPaths_toroman.png "Independent Paths")
 
-The letter labels below match the DD-PATH graph above.
-Node A is the compound predicate `not isinstance(n, int) or isinstance(n, bool)`;
-a strict decomposition would split A into two nodes and raise V(G) to 7.
-The paths below use the collapsed node A as drawn.
+The letter labels below match the DD-PATH graph above. Node A represents the collapsed
+compound predicate `not isinstance(n, int) or isinstance(n, bool)` as drawn in the graph.
 
 | Path | Node sequence | Condition exercised |
 | :---: | :--- | :--- |
@@ -38,15 +48,16 @@ The paths below use the collapsed node A as drawn.
 | P2 | Src → A → C → D → Snk | `n < 1` → raise |
 | P3 | Src → A → C → E → F → Snk | `n > 3999` → raise |
 | P4 | Src → A → C → E → G → H → L → Snk | valid input, `for` never entered |
-| P5 | Src → A → C → E → G → H → I → H → L → Snk | `while` never entered |
-| P6 | Src → A → C → E → G → H → I → J → K → I → H → L → Snk | `for and while` body executes at least once |
+| P5 | Src → A → C → E → G → H → I → H → L → Snk | `for` entered, `while` never true |
+| P6 | Src → A → C → E → G → H → I → J → K → I → H → L → Snk | `for` and `while` body execute at least once |
 
-Each path introduces at least one edge not present in any prior path, confirming the six paths
-are linearly independent.
-- P1–P3 cover the three error exits
-- P4 covers the case where the `for` condition is immediately false
-- P5 covers one `for` iteration and `while` iteration is false 
-- P6 covers at least one `for` iteration and at least one `while` iteration.
+Each path introduces at least one edge not covered by any prior path, confirming the six
+paths are linearly independent.
+- P1 covers the type-check error exit
+- P2–P3 cover the remaining two error exits
+- P4 covers the case where the `for` loop is never entered
+- P5 covers one `for` iteration with `while` condition immediately false
+- P6 covers at least one `for` iteration with at least one `while` iteration
 
 ## Build the definition-use table for `to_roman`
 
@@ -56,7 +67,7 @@ used in the basis-set paths above:
 | Node | DD-PATH letter | Code element |
 | :---: | :---: | :--- |
 | 1 | Src | function entry / parameter `n` defined |
-| 2 | A | `not isinstance(n, int) or isinstance(n, bool)` |
+| 2 | A | `not isinstance(n, int) or isinstance(n, bool)` (compound predicate) |
 | 3 | B | `raise RomanError("value must be an integer")` |
 | 4 | C | `if n < _MIN_VALUE` |
 | 5 | D | `raise RomanError("value must be >= 1")` |
@@ -73,11 +84,8 @@ used in the basis-set paths above:
 Node 14 is the unified function exit (all three `raise` paths and `return` converge there).
 The loop body is split: node 12 = `out.append(symbol)`, node 13 = `remaining -= value`.
 
-> **Compound predicate note.** Line 41 contains `not isinstance(n, int) or isinstance(n, bool)`,
-> which is a compound predicate. A strict decomposition requires two separate decision nodes, one
-> for each sub-condition, and would add one extra p-use pair for `n` (definition at node 1, p-use
-> at the second sub-condition node). The table below reflects the graph as drawn; the missing pair
-> is `1 → (bool-check node) | | n`.
+The table uses the collapsed node A (node 2) as drawn in the graph. A strict decomposition
+of the compound predicate would add one extra p-use pair: `1 → A2 | | n`.
 
 | def node → use node | c-use | p-use |
 | :---: | :---: | :---: |
