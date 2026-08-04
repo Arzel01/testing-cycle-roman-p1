@@ -56,6 +56,7 @@ def to_roman(n):
 def from_roman(s):
     if not isinstance(s, str):
         raise RomanError("value must be a string")
+    s = s.strip()
     text = s.upper()
     if text == "":
         raise RomanError("empty string is not a roman numeral")
